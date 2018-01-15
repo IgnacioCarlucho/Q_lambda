@@ -20,71 +20,77 @@ except:
         reward_threshold=0.8196, # optimum = .8196
     )
 env = gym.make(MY_ENV_NAME)
-# Variables
+# Constants
 num_action = env.action_space.n
 num_states = env.observation_space.n
 epochs = 2000
-epsilon = 0.99
 gamma = 0.9 # discount factor
-value_lambda = 0.8
+value_lambda = 1.1
 alpha = 0.1 # learning rate
-Q_table = np.zeros((num_states,num_action))
-E_table = np.zeros((num_states,num_action))
 
-# variables to plot
+
+# variables
 wins = 0
 losses = 0
-step = 0
-reward = 0.
-for i in range(epochs):
-    #print(i,step ,round(epsilon,3), wins, 'last rewrd', reward )
-    state = env.reset()
-    done = False
-    reward = 0
-    epsilon = np.maximum(epsilon - 0.001, 0.)
-    step = 0
-    while not done:
-        step = step +1
-        
-        if (random.random() < epsilon): #choose random action
-            action = np.random.randint(0,num_action)
-        else: #choose best action from Q(s,a) values
-            action = np.argmax(Q_table[state])
-        #print(Q_table[state])
-        #print(action)
-        #time.sleep(5)
-        new_state, reward, done, info = env.step(action)
-        #print(i, step, new_state, reward)
+Q_table = np.zeros((num_states,num_action))
+E_table = np.zeros((num_states,num_action))
+epsilon = 0.99
+test = 0
+for i in range(11):
+    test = test + 1
+    value_lambda = value_lambda - 0.1
+    for i in range(epochs):
+        #print(i,step ,round(epsilon,3), wins, 'last rewrd', reward )
+        state = env.reset()
+        done = False
+        reward = 0.
+        epsilon = np.maximum(epsilon - 0.001, 0.)
+        step = 0
+        while not done:
+            step = step +1
+            
+            if (random.random() < epsilon): #choose random action
+                action = np.random.randint(0,num_action)
+            else: #choose best action from Q(s,a) values
+                action = np.argmax(Q_table[state])
+            #print(Q_table[state])
+            #print(action)
+            #time.sleep(5)
+            new_state, reward, done, info = env.step(action)
+            #print(i, step, new_state, reward)
 
-        if not done: # Non-terminal state.
-           next_q = np.max(Q_table[new_state])
-           target = reward + ( gamma * next_q ) - Q_table[state][action]
-        else:
-            if reward == 1.:
-                target = reward + 9.
+            if not done: # Non-terminal state.
+               next_q = np.max(Q_table[new_state])
+               target = reward + ( gamma * next_q ) - Q_table[state][action]
             else:
-            	target = reward
-        #print(E_table)
-        E_table[state][action] = E_table[state][action] + 1.
-        
-        #print(Q_table)
-        #time.sleep(10)
-        for y in range(num_action):
-            for x in range(num_states):   
-                Q_table[x][y] = Q_table[x][y] + (alpha*target*E_table[x][y])
-                E_table[x][y] = gamma*value_lambda*E_table[x][y] 
-        #print(Q_table)
-        #time.sleep(1)
-        state = new_state
-        if done:
-            if new_state == 15:
-                wins = wins +1
-            else:
-            	losses = losses +1
+                if reward == 1.:
+                    target = reward + 9.
+                else:
+                	target = reward
+            #print(E_table)
+            E_table[state][action] = E_table[state][action] + 1.
+            
+            #print(Q_table)
+            #time.sleep(10)
+            for y in range(num_action):
+                for x in range(num_states):   
+                    Q_table[x][y] = Q_table[x][y] + (alpha*target*E_table[x][y])
+                    E_table[x][y] = gamma*value_lambda*E_table[x][y] 
+            #print(Q_table)
+            #time.sleep(1)
+            state = new_state
+            if done:
+                if new_state == 15:
+                    wins = wins +1
+                else:
+                	losses = losses +1
 
         
-print(Q_table)
-print('e', E_table)
-print('wins', wins, 'losses', losses, 'efficiency', round(100.*wins/losses,2))
-
-
+    #print(Q_table)
+    #print('e', E_table)
+    print('test', test,'lambda', round(value_lambda,3) ,'wins', wins, 'losses', losses, 'efficiency', round(100.*wins/losses,2))
+    wins = 0
+    losses = 0 
+    Q_table = np.zeros((num_states,num_action))
+    E_table = np.zeros((num_states,num_action))
+    epsilon = 0.99
