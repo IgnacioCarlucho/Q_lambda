@@ -1,4 +1,4 @@
-#Backwards view Q(λ)
+# Backwards view Q(λ)
 
 The backwards view of TD(λ) implemented in Q-learning algorithm. 
 Here I am using a custom gym environment, the non skid frozen lake, to be able to simplify the problem a bit. This is due to the fact that I am using tabular Q-learning, which struggles with high dimension spaces. 
