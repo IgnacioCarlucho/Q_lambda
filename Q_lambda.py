@@ -1,7 +1,12 @@
 import gym
 import numpy as np
-import random
 import time
+
+np.random.seed(1234)
+
+# If vanilla_Q is true the algorithm implements the vanilla q lambda algorithm described in sutton
+# otherise the watkins version is implemented
+vanilla_Q = False
 
 
 # Generate a frozen lake environment without skid
@@ -23,39 +28,40 @@ env = gym.make(MY_ENV_NAME)
 # Constants
 num_action = env.action_space.n
 num_states = env.observation_space.n
-epochs = 2000
+epochs = 3000
 gamma = 0.9 # discount factor
 value_lambda = 1.1
-alpha = 0.1 # learning rate
+alpha = 0.25 # learning rate
 
 
 # variables
-wins = 0
-losses = 0
-Q_table = np.zeros((num_states,num_action))
-E_table = np.zeros((num_states,num_action))
-epsilon = 0.99
 test = 0
 for i in range(11):
     test = test + 1
     value_lambda = value_lambda - 0.1
+    epsilon = 0.7
+    wins = 0
+    losses = 0 
+    Q_table = np.zeros((num_states,num_action))
+    E_table = np.zeros((num_states,num_action))
+
     for i in range(epochs):
         #print(i,step ,round(epsilon,3), wins, 'last rewrd', reward )
         state = env.reset()
         done = False
         reward = 0.
-        epsilon = np.maximum(epsilon - 0.001, 0.)
+        epsilon = np.maximum(epsilon - 0.0007, 0.1)
         step = 0
         while not done:
             step = step +1
             
-            if (random.random() < epsilon): #choose random action
+            if (np.random.rand() < epsilon): #choose random action
                 action = np.random.randint(0,num_action)
+                flag_max = False
             else: #choose best action from Q(s,a) values
                 action = np.argmax(Q_table[state])
-            #print(Q_table[state])
-            #print(action)
-            #time.sleep(5)
+                flag_max = True
+
             new_state, reward, done, info = env.step(action)
             #print(i, step, new_state, reward)
 
@@ -67,17 +73,19 @@ for i in range(11):
                     target = reward + 9.
                 else:
                 	target = reward
-            #print(E_table)
+
             E_table[state][action] = E_table[state][action] + 1.
             
-            #print(Q_table)
-            #time.sleep(10)
             for y in range(num_action):
                 for x in range(num_states):   
                     Q_table[x][y] = Q_table[x][y] + (alpha*target*E_table[x][y])
-                    E_table[x][y] = gamma*value_lambda*E_table[x][y] 
-            #print(Q_table)
-            #time.sleep(1)
+                    if vanilla_Q:
+                        flag_max = True
+                    if flag_max:
+                        E_table[x][y] = gamma*value_lambda*E_table[x][y] 
+                    else:
+                        E_table[x][y] = 0.
+
             state = new_state
             if done:
                 if new_state == 15:
@@ -86,11 +94,5 @@ for i in range(11):
                 	losses = losses +1
 
         
-    #print(Q_table)
-    #print('e', E_table)
-    print('test', test,'lambda', round(value_lambda,3) ,'wins', wins, 'losses', losses, 'efficiency', round(100.*wins/losses,2))
-    wins = 0
-    losses = 0 
-    Q_table = np.zeros((num_states,num_action))
-    E_table = np.zeros((num_states,num_action))
-    epsilon = 0.99
+    print('test', test,'lambda', round(value_lambda,3) ,'wins', wins, 'losses', losses, 'efficiency', round(100.*wins/(losses+wins),2))
+    
